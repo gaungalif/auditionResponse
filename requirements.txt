@@ -1,13 +1,6 @@
-
 fastdtw==0.3.4
 Flask==3.0.3
-
 librosa==0.10.2.post1
-
 numpy==2.0.1
-
-
 scipy==1.13.1
-
 SpeechRecognition==3.10.4
-

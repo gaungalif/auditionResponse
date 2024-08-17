@@ -137,19 +137,14 @@ def analyze_audio(input_audio_path, reference_audio_path, similarity_threshold=5
     
     return result
 
-# @app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['POST'])
 def analyze():
-    # input_file = request.files['input_file']
-    # reference_file = request.files['reference_file']
+    input_file = request.files['input_file']
+    reference_file = request.files['reference_file']
     
-    # input_audio_path = 'input_audio.wav'
-    # reference_audio_path = 'reference_audio.wav'
+    input_file.save(input_audio_path)
+    reference_file.save(reference_audio_path)
     
-    # input_file.save(input_audio_path)
-    # reference_file.save(reference_audio_path)
-    input_audio_path= open('/Users/gaungalif/Documents/ADA/MC3/Intonation/input_2.wav', 'rb'),
-    reference_audio_path= open('/Users/gaungalif/Documents/ADA/MC3/Intonation/reference.wav', 'rb')
-
     result = analyze_audio(input_audio_path, reference_audio_path)
     
     # Clean up the uploaded files
@@ -160,4 +155,5 @@ def analyze():
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    analyze()
+    res = analyze()
+    print(res)

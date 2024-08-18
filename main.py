@@ -19,7 +19,7 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 # app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 # app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery = Celery('main', broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 # Fungsi untuk mengonversi float32 menjadi float agar bisa diserialisasi ke JSON

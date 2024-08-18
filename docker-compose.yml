@@ -20,7 +20,7 @@ services:
   celery-worker:
     build: .
     container_name: celery-worker
-    command: celery -A main.celery worker --loglevel=info
+    command: celery -A main.celery worker --loglevel=debug --autoreload
     volumes:
       - .:/app
     environment:

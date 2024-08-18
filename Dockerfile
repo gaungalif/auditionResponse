@@ -1,20 +1,21 @@
-# Gunakan image Python terbaru
-FROM python:3.11
+# Gunakan base image yang mendukung Python 3.9
+FROM python:3.9-slim
 
-# Set working directory
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Tentukan working directory di dalam container
 WORKDIR /app
 
-# Copy requirements.txt ke dalam image
-COPY requirements.txt .
+# Salin file requirements.txt ke dalam container
+COPY requirements.txt /app/
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies Python
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy kode aplikasi ke dalam image
-COPY . .
+# Salin seluruh kode aplikasi ke dalam container
+COPY . /app/
 
-# Expose port yang digunakan aplikasi
-EXPOSE 5000
-
-# Jalankan aplikasi
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+# Jalankan perintah untuk Celery worker
+CMD ["celery", "-A", "app.celery", "worker", "--loglevel=info"]

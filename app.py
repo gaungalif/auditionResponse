@@ -16,8 +16,21 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Batas ukuran file 16 MB
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 
+# app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+# app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
+
+# Fungsi untuk mengonversi float32 menjadi float agar bisa diserialisasi ke JSON
+def convert_to_float(obj):
+    if isinstance(obj, np.float32):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_to_float(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_float(item) for item in obj]
+    return obj
 
 # Speech-to-Text menggunakan SpeechRecognition
 def transcribe_audio(audio_path):
@@ -114,6 +127,9 @@ def analyze_audio(input_audio_path, reference_audio_path):
         'mean_energy_reference': mean_energy_reference,
         'std_energy_reference': std_energy_reference
     }
+
+    # Konversi hasil ke float agar bisa diserialisasi ke JSON
+    result = convert_to_float(result)
     
     # Hapus file sementara setelah analisis selesai
     os.remove(input_audio_path)

@@ -18,4 +18,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 # Jalankan perintah untuk Celery worker
-CMD ["celery", "-A", "app.celery", "worker", "--loglevel=info"]
+CMD ["celery", "-A", "app", "worker", "--loglevel=info"]

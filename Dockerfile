@@ -1,18 +1,16 @@
-# Gunakan image dasar yang memiliki Python
-FROM python:3.9-slim
+# Gunakan image dasar Python
+FROM python:3.11-slim
 
-# Set working directory
+# Atur direktori kerja di dalam container
 WORKDIR /app
 
 # Salin requirements.txt dan install dependencies
-COPY . .
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Salin semua file ke dalam container
-
-
-# Expose port aplikasi
+# Salin seluruh kode aplikasi ke dalam container
+COPY . .
 EXPOSE 5000
 
-# Jalankan aplikasi
-CMD ["python", "app.py"]
+# Jalankan aplikasi Flask
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

@@ -4,6 +4,6 @@ librosa==0.10.2.post1
 numpy==2.0.1
 scipy==1.13.1
 SpeechRecognition==3.10.4
-kombu==5.2.3
+kombu==5.3.4
 celery==5.4.0
 redis==4.5.5

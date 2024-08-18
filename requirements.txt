@@ -4,3 +4,5 @@ librosa==0.10.2.post1
 numpy==2.0.1
 scipy==1.13.1
 SpeechRecognition==3.10.4
+celery==5.2.7
+redis==4.3.3

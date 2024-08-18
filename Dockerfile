@@ -1,15 +1,20 @@
-# Gunakan image Python sebagai base image
+# Gunakan image Python terbaru
 FROM python:3.11
 
 # Set working directory
 WORKDIR /app
 
-# Salin requirements.txt dan instal dependensi
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+# Copy requirements.txt ke dalam image
+COPY requirements.txt .
 
-# Salin seluruh kode aplikasi
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy kode aplikasi ke dalam image
 COPY . .
 
-# Jalankan aplikasi Flask
+# Expose port yang digunakan aplikasi
+EXPOSE 5000
+
+# Jalankan aplikasi
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

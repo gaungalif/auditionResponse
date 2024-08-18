@@ -1,16 +1,16 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
     build: .
-    command: celery -A app.celery worker --loglevel=info
-    depends_on:
-      - redis
-    volumes:
-      - .:/app
     ports:
       - "5000:5000"
-  
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
   redis:
     image: redis:latest
     ports:

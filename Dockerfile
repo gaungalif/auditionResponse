@@ -16,6 +16,3 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Salin seluruh kode aplikasi ke dalam container
 COPY . .
-
-# Jalankan perintah untuk Celery worker
-CMD ["celery", "-A", "app", "worker", "--loglevel=info"]

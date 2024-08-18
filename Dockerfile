@@ -9,13 +9,13 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Salin file requirements.txt ke dalam container
-COPY requirements.txt /app/
+COPY requirements.txt .
 
 # Install dependencies Python
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Salin seluruh kode aplikasi ke dalam container
-COPY . /app/
+COPY . .
 
 # Jalankan perintah untuk Celery worker
 CMD ["celery", "-A", "app.celery", "worker", "--loglevel=info"]

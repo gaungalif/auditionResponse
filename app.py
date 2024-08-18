@@ -6,7 +6,7 @@ from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 import os
 
-# app = Flask(__name__)
+app = Flask(__name__)
 
 # Speech-to-Text using SpeechRecognition
 def transcribe_audio(audio_path):
@@ -142,8 +142,8 @@ def analyze():
     input_file = request.files['input_file']
     reference_file = request.files['reference_file']
     
-    input_file.save(input_audio_path)
-    reference_file.save(reference_audio_path)
+    #input_file.save(input_audio_path)
+    #reference_file.save(reference_audio_path)
     
     result = analyze_audio(input_audio_path, reference_audio_path)
     
@@ -154,6 +154,6 @@ def analyze():
     return jsonify(result)
 
 if __name__ == '__main__':
-    # app.run(debug=True)
-    res = analyze()
-    print(res)
+    app.run(host="0.0.0.0", port=5000)
+    # res = analyze()
+    # print(res)

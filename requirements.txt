@@ -1,8 +1,9 @@
+Flask==2.3.2
+Celery==5.4.7
+redis==4.4.1
+librosa==0.10.0
+numpy==1.25.1
+scipy==1.11.2
+SpeechRecognition==3.8.1
+kombu==5.2.4
 fastdtw==0.3.4
-Flask==3.0.3
-librosa==0.10.2.post1
-numpy==2.0.1
-scipy==1.13.1
-SpeechRecognition==3.10.4
-celery==5.2.7
-redis==4.3.3

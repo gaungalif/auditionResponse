@@ -1,17 +1,18 @@
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify
 import librosa
 import numpy as np
 import speech_recognition as sr
-from scipy.spatial.distance import cdist
-from librosa.sequence import dtw
-import io
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
+import os
+import tempfile
 from celery import Celery
 
 # Inisialisasi Flask dan konfigurasi Celery
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Batas ukuran file 16 MB
 
-# Konfigurasi Celery untuk menggunakan Redis
+# Konfigurasi Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 
@@ -19,9 +20,9 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 # Speech-to-Text menggunakan SpeechRecognition
-def transcribe_audio(audio_file):
+def transcribe_audio(audio_path):
     recognizer = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
+    with sr.AudioFile(audio_path) as source:
         audio = recognizer.record(source)
         text = recognizer.recognize_google(audio)
     return text
@@ -31,8 +32,9 @@ def split_text_to_words(text):
     return text.split()
 
 # Analisis Intonasi
-def extract_pitch(audio_data, sr):
-    pitches, magnitudes = librosa.piptrack(y=audio_data, sr=sr)
+def extract_pitch(audio_path):
+    y, sr = librosa.load(audio_path, sr=None)
+    pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
     pitch = [np.mean(pitches[magnitudes > 0], axis=0) for magnitude in magnitudes]
     return pitch
 
@@ -42,57 +44,59 @@ def analyze_intonation(pitch):
     return pitch_mean, pitch_std
 
 # Analisis Ritme
-def detect_onsets(audio_data, sr):
-    onset_times = librosa.onset.onset_detect(y=audio_data, sr=sr, units='time')
+def detect_onsets(audio_path):
+    y, sr = librosa.load(audio_path, sr=None)
+    onset_times = librosa.onset.onset_detect(y=y, sr=sr, units='time')
     return onset_times
 
 def calculate_rhythm_accuracy(onset_times_input, onset_times_reference):
-    onset_times_input = np.array(onset_times_input).reshape(-1, 1)
-    onset_times_reference = np.array(onset_times_reference).reshape(-1, 1)
-    D, _ = dtw(onset_times_input, onset_times_reference)
-    average_onset_difference = np.mean(D)
+    onset_times_input = np.array(onset_times_input)
+    onset_times_reference = np.array(onset_times_reference)
+    distance, _ = fastdtw(onset_times_input.reshape(-1, 1), onset_times_reference.reshape(-1, 1), dist=euclidean)
+    average_onset_difference = np.mean(distance)
     rhythm_accuracy_percentage = 100 - average_onset_difference
     return average_onset_difference, rhythm_accuracy_percentage
 
 # Analisis Kontrol Napas
-def analyze_breath_control(audio_data):
-    energy = librosa.feature.rms(y=audio_data)[0]
+def analyze_breath_control(audio_path):
+    y, sr = librosa.load(audio_path, sr=None)
+    energy = librosa.feature.rms(y=y)[0]
     mean_energy = np.mean(energy)
     std_energy = np.std(energy)
     return mean_energy, std_energy
 
 # Fungsi Analisis Utama (Background Task)
 @celery.task
-def analyze_audio(input_audio_file, reference_audio_file):
-    # Load audio files dari memory
-    input_y, input_sr = librosa.load(input_audio_file, sr=None)
-    reference_y, reference_sr = librosa.load(reference_audio_file, sr=None)
+def analyze_audio(input_audio_path, reference_audio_path):
+    # Load audio files dari disk
+    input_y, input_sr = librosa.load(input_audio_path, sr=None)
+    reference_y, reference_sr = librosa.load(reference_audio_path, sr=None)
     
     # Transkripsi audio ke teks
-    input_text = transcribe_audio(input_audio_file)
-    reference_text = transcribe_audio(reference_audio_file)
+    input_text = transcribe_audio(input_audio_path)
+    reference_text = transcribe_audio(reference_audio_path)
     
     # Simulasi pemisahan kata
     input_words = split_text_to_words(input_text)
     reference_words = split_text_to_words(reference_text)
     
     # Analisis berdasarkan audio referensi
-    onset_times_input = detect_onsets(input_y, input_sr)
-    onset_times_reference = detect_onsets(reference_y, reference_sr)
+    onset_times_input = detect_onsets(input_audio_path)
+    onset_times_reference = detect_onsets(reference_audio_path)
     
     # Analisis Intonasi
-    input_pitches = extract_pitch(input_y, input_sr)
+    input_pitches = extract_pitch(input_audio_path)
     intonation_mean_input, intonation_std_input = analyze_intonation(input_pitches)
     
-    reference_pitches = extract_pitch(reference_y, reference_sr)
+    reference_pitches = extract_pitch(reference_audio_path)
     intonation_mean_reference, intonation_std_reference = analyze_intonation(reference_pitches)
     
     # Analisis Ritme
     average_onset_difference, rhythm_accuracy_percentage = calculate_rhythm_accuracy(onset_times_input, onset_times_reference)
     
     # Analisis Kontrol Napas
-    mean_energy_input, std_energy_input = analyze_breath_control(input_y)
-    mean_energy_reference, std_energy_reference = analyze_breath_control(reference_y)
+    mean_energy_input, std_energy_input = analyze_breath_control(input_audio_path)
+    mean_energy_reference, std_energy_reference = analyze_breath_control(reference_audio_path)
     
     result = {
         'input_text': input_text,
@@ -111,6 +115,10 @@ def analyze_audio(input_audio_file, reference_audio_file):
         'std_energy_reference': std_energy_reference
     }
     
+    # Hapus file sementara setelah analisis selesai
+    os.remove(input_audio_path)
+    os.remove(reference_audio_path)
+    
     return result
 
 # Route untuk Analisis
@@ -119,11 +127,15 @@ def analyze():
     input_file = request.files['input_file']
     reference_file = request.files['reference_file']
     
-    input_audio_file = io.BytesIO(input_file.read())
-    reference_audio_file = io.BytesIO(reference_file.read())
+    # Simpan file audio ke disk
+    input_audio_path = os.path.join(tempfile.gettempdir(), 'input_audio.wav')
+    reference_audio_path = os.path.join(tempfile.gettempdir(), 'reference_audio.wav')
+    
+    input_file.save(input_audio_path)
+    reference_file.save(reference_audio_path)
     
     # Jalankan analisis sebagai background task
-    task = analyze_audio.delay(input_audio_file, reference_audio_file)
+    task = analyze_audio.delay(input_audio_path, reference_audio_path)
     
     return jsonify({"task_id": task.id}), 202
 

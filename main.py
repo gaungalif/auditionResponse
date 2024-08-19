@@ -46,16 +46,31 @@ def split_text_to_words(text):
     return text.split()
 
 # Analisis Intonasi
+# def extract_pitch(audio_path):
+#     y, sr = librosa.load(audio_path, sr=None)
+#     pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+#     pitch = [np.mean(pitches[magnitudes > 0], axis=0) for magnitude in magnitudes]
+#     return pitch
+
 def extract_pitch(audio_path):
     y, sr = librosa.load(audio_path, sr=None)
     pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-    pitch = [np.mean(pitches[magnitudes > 0], axis=0) for magnitude in magnitudes]
+    
+    pitch = []
+    for t in range(pitches.shape[1]):
+        index = magnitudes[:, t].argmax()
+        pitch_value = pitches[index, t]
+        if pitch_value > 0:  # Filter out non-positive pitches
+            pitch.append(pitch_value)
+    
     return pitch
 
+
 def analyze_intonation(pitch):
-    pitch_mean = np.mean(pitch)
-    pitch_std = np.std(pitch)
+    pitch_mean = np.mean(pitch) if pitch else 0  # Menghindari error jika pitch kosong
+    pitch_std = np.std(pitch) if pitch else 0
     return pitch_mean, pitch_std
+
 
 # Analisis Ritme
 def detect_onsets(audio_path):
@@ -99,18 +114,24 @@ def calculate_speech_rate(audio_path, words):
     return speech_rate
 
 def calculate_intonation_accuracy(mean_input, std_input, mean_reference, std_reference):
-    # Perbedaan mean dan std deviasi antara input dan referensi
-    mean_difference = abs(mean_input - mean_reference)
-    std_difference = abs(std_input - std_reference)
+    # Pastikan mean_reference tidak nol untuk menghindari pembagian dengan nol
+    if mean_reference != 0:
+        mean_difference = abs(mean_input - mean_reference)
+        mean_accuracy_percentage = max(0, 100 - (mean_difference / mean_reference * 100))
+    else:
+        mean_accuracy_percentage = 0
     
-    # Menghitung persentase akurasi
-    mean_accuracy_percentage = max(0, 100 - (mean_difference / mean_reference * 100))
-    std_accuracy_percentage = max(0, 100 - (std_difference / std_reference * 100))
+    if std_reference != 0:
+        std_difference = abs(std_input - std_reference)
+        std_accuracy_percentage = max(0, 100 - (std_difference / std_reference * 100))
+    else:
+        std_accuracy_percentage = 0
     
     # Menggabungkan akurasi mean dan std untuk menghitung akurasi intonasi keseluruhan
     intonation_accuracy_percentage = (mean_accuracy_percentage + std_accuracy_percentage) / 2
     
     return intonation_accuracy_percentage
+
 
 
 # Fungsi Analisis Utama (Background Task)

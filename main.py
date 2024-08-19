@@ -96,14 +96,20 @@ def analyze_breath_control(audio_path):
 
 # Menghitung Pitch Range
 def calculate_pitch_range(pitches):
-    pitches = pitches[pitches > 0]  # Hanya gunakan pitch yang valid (non-zero)
-    if len(pitches) > 0:
-        pitch_min = np.min(pitches)
-        pitch_max = np.max(pitches)
+    # Hanya gunakan pitch yang valid (non-zero)
+    valid_pitches = [pitch for pitch in pitches if pitch > 0]
+    
+    if valid_pitches:
+        pitch_min = min(valid_pitches)
+        pitch_max = max(valid_pitches)
         pitch_range = pitch_max - pitch_min
-        return pitch_min, pitch_max, pitch_range
     else:
-        return None, None, None
+        pitch_min = 0
+        pitch_max = 0
+        pitch_range = 0
+    
+    return pitch_min, pitch_max, pitch_range
+
 
 # Menghitung Speech Rate
 def calculate_speech_rate(audio_path, words):

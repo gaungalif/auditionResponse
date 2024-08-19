@@ -79,7 +79,7 @@ def analyze_breath_control(audio_path):
     return mean_energy, std_energy
 
 # Fungsi Analisis Utama (Background Task)
-@celery.task
+@celery.task(name='app.main.analyze_audio')
 def analyze_audio(input_audio_path, reference_audio_path):
     # Load audio files dari disk
     input_y, input_sr = librosa.load(input_audio_path, sr=None)

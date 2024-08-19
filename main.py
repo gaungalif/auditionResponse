@@ -134,7 +134,15 @@ def calculate_intonation_accuracy(mean_input, std_input, mean_reference, std_ref
     
     return intonation_accuracy_percentage
 
-
+def calculate_similarity_percentage(input_words, reference_words):
+    matching_words = set(input_words) & set(reference_words)
+    total_words = len(set(input_words) | set(reference_words))
+    
+    if total_words == 0:
+        return 0
+    
+    similarity_percentage = (len(matching_words) / total_words) * 100
+    return similarity_percentage
 
 # Fungsi Analisis Utama (Background Task)
 @celery.task(name='app.main.analyze_audio')
@@ -145,12 +153,17 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Transkripsi audio ke teks
     input_text = transcribe_audio(input_audio_path)
-    # reference_text = transcribe_audio(reference_audio_path)
+    reference_text = transcribe_audio(reference_audio_path)
     
     # Simulasi pemisahan kata
     input_words = split_text_to_words(input_text)
-    # reference_words = split_text_to_words(reference_text)
+    reference_words = split_text_to_words(reference_text)
     
+    similarity_percentage = calculate_similarity_percentage(input_words, reference_words)
+    
+    if similarity_percentage < 50:
+        return f"Audio berbeda, persentase kesesuaianmu = {similarity_percentage}%"
+
     # Analisis berdasarkan audio referensi
     onset_times_input = detect_onsets(input_audio_path)
     onset_times_reference = detect_onsets(reference_audio_path)

@@ -79,12 +79,46 @@ def analyze_breath_control(audio_path):
     std_energy = np.std(energy)
     return mean_energy, std_energy
 
+# Menghitung Pitch Range
+def calculate_pitch_range(pitches):
+    pitches = pitches[pitches > 0]  # Hanya gunakan pitch yang valid (non-zero)
+    if len(pitches) > 0:
+        pitch_min = np.min(pitches)
+        pitch_max = np.max(pitches)
+        pitch_range = pitch_max - pitch_min
+        return pitch_min, pitch_max, pitch_range
+    else:
+        return None, None, None
+
+# Menghitung Speech Rate
+def calculate_speech_rate(audio_path, words):
+    y, sr = librosa.load(audio_path, sr=None)
+    duration = librosa.get_duration(y=y, sr=sr)
+    word_count = len(words)
+    speech_rate = word_count / duration
+    return speech_rate
+
+def calculate_intonation_accuracy(mean_input, std_input, mean_reference, std_reference):
+    # Perbedaan mean dan std deviasi antara input dan referensi
+    mean_difference = abs(mean_input - mean_reference)
+    std_difference = abs(std_input - std_reference)
+    
+    # Menghitung persentase akurasi
+    mean_accuracy_percentage = max(0, 100 - (mean_difference / mean_reference * 100))
+    std_accuracy_percentage = max(0, 100 - (std_difference / std_reference * 100))
+    
+    # Menggabungkan akurasi mean dan std untuk menghitung akurasi intonasi keseluruhan
+    intonation_accuracy_percentage = (mean_accuracy_percentage + std_accuracy_percentage) / 2
+    
+    return intonation_accuracy_percentage
+
+
 # Fungsi Analisis Utama (Background Task)
 @celery.task(name='app.main.analyze_audio')
 def analyze_audio(input_audio_path, reference_audio_path):
     # Load audio files dari disk
-    input_y, input_sr = librosa.load(input_audio_path, sr=None)
-    reference_y, reference_sr = librosa.load(reference_audio_path, sr=None)
+    # input_y, input_sr = librosa.load(input_audio_path, sr=None)
+    # reference_y, reference_sr = librosa.load(reference_audio_path, sr=None)
     
     # Transkripsi audio ke teks
     input_text = transcribe_audio(input_audio_path)
@@ -92,7 +126,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Simulasi pemisahan kata
     input_words = split_text_to_words(input_text)
-    reference_words = split_text_to_words(reference_text)
+    # reference_words = split_text_to_words(reference_text)
     
     # Analisis berdasarkan audio referensi
     onset_times_input = detect_onsets(input_audio_path)
@@ -105,28 +139,48 @@ def analyze_audio(input_audio_path, reference_audio_path):
     reference_pitches = extract_pitch(reference_audio_path)
     intonation_mean_reference, intonation_std_reference = analyze_intonation(reference_pitches)
     
+    # Menghitung Pitch Range
+    input_pitch_min, input_pitch_max, input_pitch_range = calculate_pitch_range(input_pitches)
+    # reference_pitch_min, reference_pitch_max, reference_pitch_range = calculate_pitch_range(reference_pitches)
+    
+    # Menghitung Akurasi Intonasi
+    intonation_accuracy_percentage = calculate_intonation_accuracy(intonation_mean_input, intonation_std_input, intonation_mean_reference, intonation_std_reference)
+    
     # Analisis Ritme
     average_onset_difference, rhythm_accuracy_percentage = calculate_rhythm_accuracy(onset_times_input, onset_times_reference)
     
     # Analisis Kontrol Napas
-    mean_energy_input, std_energy_input = analyze_breath_control(input_audio_path)
-    mean_energy_reference, std_energy_reference = analyze_breath_control(reference_audio_path)
+    # mean_energy_input, std_energy_input = analyze_breath_control(input_audio_path)
+    # mean_energy_reference, std_energy_reference = analyze_breath_control(reference_audio_path)
+    
+    # Menghitung Speech Rate
+    input_speech_rate = calculate_speech_rate(input_audio_path, input_words)
+    # reference_speech_rate = calculate_speech_rate(reference_audio_path, reference_words)
     
     result = {
         'input_text': input_text,
         'reference_text': reference_text,
-        'input_words': input_words,
-        'reference_words': reference_words,
-        'intonation_mean_input': intonation_mean_input,
-        'intonation_std_input': intonation_std_input,
-        'intonation_mean_reference': intonation_mean_reference,
-        'intonation_std_reference': intonation_std_reference,
-        'average_onset_difference': average_onset_difference,
+        # 'input_words': input_words,
+        # 'reference_words': reference_words,
+        # 'intonation_mean_input': intonation_mean_input,
+        # 'intonation_std_input': intonation_std_input,
+        # 'intonation_mean_reference': intonation_mean_reference,
+        # 'intonation_std_reference': intonation_std_reference,
+        'input_pitch_min': input_pitch_min,
+        'input_pitch_max': input_pitch_max,
+        # 'input_pitch_range': input_pitch_range,
+        # 'reference_pitch_min': reference_pitch_min,
+        # 'reference_pitch_max': reference_pitch_max,
+        # 'reference_pitch_range': reference_pitch_range,
+        'intonation_accuracy_percentage': intonation_accuracy_percentage,
+        # 'average_onset_difference': average_onset_difference,
         'rhythm_accuracy_percentage': rhythm_accuracy_percentage,
-        'mean_energy_input': mean_energy_input,
-        'std_energy_input': std_energy_input,
-        'mean_energy_reference': mean_energy_reference,
-        'std_energy_reference': std_energy_reference
+        # 'mean_energy_input': mean_energy_input,
+        # 'std_energy_input': std_energy_input,
+        # 'mean_energy_reference': mean_energy_reference,
+        # 'std_energy_reference': std_energy_reference,
+        'input_speech_rate': input_speech_rate,
+        # 'reference_speech_rate': reference_speech_rate
     }
 
     # Konversi hasil ke float agar bisa diserialisasi ke JSON
@@ -137,6 +191,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     os.remove(reference_audio_path)
     
     return result
+
 
 # Route untuk Analisis
 @app.route('/analyze', methods=['POST'])

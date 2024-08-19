@@ -9,6 +9,7 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+      - /tmp:/tmp  # Tambahkan ini untuk sharing /tmp
     environment:
       - FLASK_ENV=development
       - FLASK_APP=main.py
@@ -23,6 +24,7 @@ services:
     command: celery -A main.celery worker --loglevel=debug
     volumes:
       - .:/app
+      - /tmp:/tmp  # Tambahkan ini untuk sharing /tmp
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0

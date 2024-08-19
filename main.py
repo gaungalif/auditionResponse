@@ -12,15 +12,16 @@ from celery import Celery
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Batas ukuran file 16 MB
 
-# Konfigurasi Celery
-app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
+# # Konfigurasi Celery
+# app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
+# app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 
 # app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 # app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
-celery = Celery('main', broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+# celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery = Celery(app.name)
+# celery.conf.update(app.config)
 
 # Fungsi untuk mengonversi float32 menjadi float agar bisa diserialisasi ke JSON
 def convert_to_float(obj):

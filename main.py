@@ -55,16 +55,12 @@ def split_text_to_words(text):
 def extract_pitch(audio_path):
     y, sr = librosa.load(audio_path, sr=None)
     pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+    pitches = pitches[magnitudes > 0]  # Use only pitches where magnitude is non-zero
     
-    pitch = []
-    for t in range(pitches.shape[1]):
-        index = magnitudes[:, t].argmax()
-        pitch_value = pitches[index, t]
-        if pitch_value > 0:  # Filter out non-positive pitches
-            pitch.append(pitch_value)
+    # Filter to keep only realistic human pitch range (approximately 64 Hz to 3000 Hz)
+    valid_pitches = [pitch for pitch in pitches if 64 <= pitch <= 3000]
     
-    return pitch
-
+    return valid_pitches
 
 def analyze_intonation(pitch):
     pitch_mean = np.mean(pitch) if pitch else 0  # Menghindari error jika pitch kosong
@@ -149,7 +145,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Transkripsi audio ke teks
     input_text = transcribe_audio(input_audio_path)
-    reference_text = transcribe_audio(reference_audio_path)
+    # reference_text = transcribe_audio(reference_audio_path)
     
     # Simulasi pemisahan kata
     input_words = split_text_to_words(input_text)
@@ -185,8 +181,8 @@ def analyze_audio(input_audio_path, reference_audio_path):
     # reference_speech_rate = calculate_speech_rate(reference_audio_path, reference_words)
     
     result = {
-        'input_text': input_text,
-        'reference_text': reference_text,
+        # 'input_text': input_text,
+        # 'reference_text': reference_text,
         # 'input_words': input_words,
         # 'reference_words': reference_words,
         # 'intonation_mean_input': intonation_mean_input,
@@ -195,7 +191,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
         # 'intonation_std_reference': intonation_std_reference,
         'input_pitch_min': input_pitch_min,
         'input_pitch_max': input_pitch_max,
-        # 'input_pitch_range': input_pitch_range,
+        'input_pitch_range': input_pitch_range,
         # 'reference_pitch_min': reference_pitch_min,
         # 'reference_pitch_max': reference_pitch_max,
         # 'reference_pitch_range': reference_pitch_range,

@@ -162,7 +162,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     similarity_percentage = calculate_similarity_percentage(input_words, reference_words)
     
     if similarity_percentage < 50:
-        return f"Audio berbeda, persentase kesesuaianmu = {similarity_percentage}%"
+        return f"Audio berbeda, persentase kesesuaianmu = {similarity_percentage}, input words = {input_words}, reference words = {reference_words}"
 
     # Analisis berdasarkan audio referensi
     onset_times_input = detect_onsets(input_audio_path)
@@ -196,8 +196,8 @@ def analyze_audio(input_audio_path, reference_audio_path):
     result = {
         # 'input_text': input_text,
         # 'reference_text': reference_text,
-        # 'input_words': input_words,
-        # 'reference_words': reference_words,
+        'input_words': input_words,
+        'reference_words': reference_words,
         # 'intonation_mean_input': intonation_mean_input,
         # 'intonation_std_input': intonation_std_input,
         # 'intonation_mean_reference': intonation_mean_reference,

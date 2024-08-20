@@ -5,7 +5,7 @@ from PIL import Image
 import librosa
 import numpy as np
 from celery import Celery
-from .utils import (
+from app.utils import (
     transcribe_audio, split_text_to_words, extract_pitch, analyze_intonation,
     calculate_rhythm_accuracy, calculate_pitch_range, calculate_speech_rate,
     calculate_intonation_accuracy, calculate_similarity_percentage, cleanse_audio,

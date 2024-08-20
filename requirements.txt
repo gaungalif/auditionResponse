@@ -1,9 +1,13 @@
 fastdtw==0.3.4
 Flask==3.0.3
 librosa==0.10.2.post1
-numpy==2.0.1
+numpy==1.26.4
 scipy==1.13.1
 SpeechRecognition==3.10.4
 kombu==5.3.4
 celery==5.4.0
 redis==4.5.5
+noisereduce==2.0.0
+matplotlib==3.7.1
+pillow==10.0.0
+pydub==0.25.1

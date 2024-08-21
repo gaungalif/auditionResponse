@@ -21,7 +21,7 @@ services:
   celery-worker:
     build: .
     container_name: celery-worker
-    command: celery -A app.main.celery worker --loglevel=debug
+    command: celery -A main.celery worker --loglevel=debug
     volumes:
       - .:/app
       - /tmp:/tmp  # Tambahkan ini untuk sharing /tmp

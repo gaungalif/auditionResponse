@@ -409,20 +409,15 @@ def analyze_audio(input_audio_path, reference_audio_path):
 
 
     return {
-            {"AuditionResult": 
-            {
-                "intonation": intonation,
-                "rhythm": rhythm,   
+                "AuditionResult":{
+                    "intonation": intonation,
+                    "rhythm": rhythm,   
+                },
+                "VocalProfile":{
+                    "pitch_range": identified_voice_type,
+                    "speech_rate": identified_speech_rate,
+                }
             }
-            },
-            {"VocalProfile":
-             {
-                "pitch_range": identified_voice_type,
-                "speech_rate": identified_speech_rate,
-             }
-
-            }
-        }
 
 
 # Route for analysis

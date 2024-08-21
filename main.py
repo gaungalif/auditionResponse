@@ -29,6 +29,7 @@ def convert_m4a_to_wav(m4a_path, wav_path):
 
 # Function to convert float32 to float for JSON serialization
 def convert_to_float(obj):
+    # print(f"Converting: {obj} ({type(obj)})")
     if isinstance(obj, np.float32):
         return float(obj)
     elif isinstance(obj, dict):
@@ -36,6 +37,7 @@ def convert_to_float(obj):
     elif isinstance(obj, list):
         return [convert_to_float(item) for item in obj]
     return obj
+
 
 # Speech-to-Text using SpeechRecognition
 def transcribe_audio(audio_path):
@@ -283,7 +285,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     input_pitch_min, input_pitch_max, _ = calculate_pitch_range(input_pitches)
     
     # Calculate median pitch
-    detect_median_pitch = np.median(input_pitches) if input_pitches else 0
+    detect_median_pitch = convert_to_float(np.median(input_pitches) if input_pitches else 0)
     
     # Generate pitch graphs
     pitch_graphs = generate_pitch_graphs(input_pitches, reference_pitches)
@@ -314,7 +316,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     print(type(res_converted))
     print(type(result))
     # return type of result
-    return {'success':'success'}
+    return {"result": res_converted}
 
 
 # Route for analysis
@@ -340,6 +342,8 @@ def analyze():
     task = analyze_audio.delay(input_wav_path, reference_audio_path)
 
     return jsonify({"task_id": task.id}), 202
+
+
     
 
 # Endpoint to check task status
@@ -367,6 +371,7 @@ def task_status(task_id):
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({"error": "File too large!"}), 413
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5000)

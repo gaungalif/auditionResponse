@@ -95,10 +95,13 @@ def calculate_pitch_range(pitches):
 # Calculate speech rate
 def calculate_speech_rate(audio_path, words):
     y, sr = librosa.load(audio_path, sr=None)
-    duration = librosa.get_duration(y=y, sr=sr)
+    duration_seconds = librosa.get_duration(y=y, sr=sr)
+    duration_minutes = duration_seconds / 60
     word_count = len(words)
-    speech_rate = word_count / duration
-    return speech_rate
+    speech_rate_wpm = word_count / duration_minutes
+    
+    return speech_rate_wpm
+
 
 # Function to generate speech rate graph
 def generate_speech_rate_graph(input_speech_rate, reference_speech_rate):
@@ -184,23 +187,101 @@ def generate_pitch_graphs(input_pitches, reference_pitches):
     pitch_graphs = base64.b64encode(plot_image.read()).decode('utf-8')
     return pitch_graphs
 
+
+def identify_speech_rate(speech_rate_wpm):
+    speech_rate_categories = {
+        "Leisure Pace (less than 110 wpm)": {
+            "range": (0, 110),
+            "feedback": "Your speech is at a Leisure Pace, giving your words time to resonate. It’s great for thoughtful moments but might need a slight speed boost in conversations.",
+            "tips": "Practice slightly faster speech to keep listeners engaged while maintaining clarity."
+        },
+        "Conversational Flow (120 - 160 wpm)": {
+            "range": (120, 160),
+            "feedback": "You're at a Conversational Flow—natural and engaging. This pace works well for everyday interactions.",
+            "tips": "Vary your speed slightly to emphasize key points or add excitement."
+        },
+        "Expressive Pace (160 - 200 wpm)": {
+            "range": (160, 200),
+            "feedback": "Your Expressive Pace adds energy and excitement. Just be careful to maintain clarity at this speed.",
+            "tips": "Focus on clear articulation to ensure your words remain understandable."
+        },
+        "Narrator's Tempo (150 - 160 wpm)": {
+            "range": (150, 160),
+            "feedback": "You're at a Narrator's Tempo, ideal for clear, thoughtful delivery. This pace works well for storytelling.",
+            "tips": "Vary your speed slightly to highlight important moments."
+        },
+        "Speed Talk (250 - 400 wpm)": {
+            "range": (250, 400),
+            "feedback": "Your Speed Talk is impressively fast, perfect for rapid delivery. Just watch for clarity.",
+            "tips": "Practice enunciating key words even at high speeds to keep your message clear."
+        }
+    }
+
+    identified_speech_rate_category = None
+    speech_rate_feedback = {}
+    
+    for category, attributes in speech_rate_categories.items():
+        low, high = attributes["range"]
+        if low <= speech_rate_wpm <= high:
+            identified_speech_rate_category = category
+            speech_rate_feedback = {
+                "name": "speech_rate",
+                "value": f"{low} - {high} wpm",
+                "type": identified_speech_rate_category,
+                "feedback": attributes["feedback"],
+                "tips": attributes["tips"]
+            }
+            break
+    
+    return speech_rate_feedback
+
 # Identify voice type based on median pitch
 def identify_voice_type(detect_median_pitch):
     voice_types = {
-        "Soprano": (261.63, 1046.50),
-        "Mezzo-soprano": (220.00, 880.00),
-        "Contralto": (174.61, 698.46),
-        "Tenor": (130.81, 523.25),
-        "Baritone": (110.00, 440.00),
-        "Bass": (82.41, 329.63)
+        "Mezzo-Soprano": {
+            "range": (220.00, 700.00),
+            "detail": "Your pitch range aligns with the Mezzo-Soprano category, typically between A3 and A5. This voice type balances warmth and brightness, allowing for a rich, expressive tone.",
+            "tips": "Keep developing your middle register, focusing on smooth transitions between lower and higher notes."
+        },
+        "Contralto": {
+            "range": (175.00, 600.00),
+            "detail": "Your pitch range is within the Contralto category, typically between F3 and F5. As the lowest female voice, your range has a deep, rich quality that brings warmth and depth to your singing.",
+            "tips": "Continue to explore the full potential of your lower register while maintaining clarity and strength."
+        },
+        "Tenor": {
+            "range": (130.00, 520.00),
+            "detail": "Your pitch range fits within the Tenor category, typically between C3 and C5. This is the highest male voice type, known for its bright, ringing tone.",
+            "tips": "Focus on refining your upper range while maintaining control over your higher notes."
+        },
+        "Baritone": {
+            "range": (110.00, 440.00),
+            "detail": "Your pitch range falls within the Baritone category, typically between A2 and A4. As a middle male voice, your range combines depth and warmth with the ability to reach higher notes.",
+            "tips": "Keep practicing to ensure smooth transitions across your range and maintain a strong, resonant tone."
+        },
+        "Bass": {
+            "range": (82.00, 330.00),
+            "detail": "Your pitch range aligns with the Bass category, typically between E2 and E4. This is the lowest male voice type, characterized by deep, resonant tones.",
+            "tips": "Focus on strengthening your lower register while ensuring clarity and power in your low notes. Your voice brings a strong foundation to any performance—embrace its depth and authority."
+        }
     }
-    
+
     identified_voice_type = None
-    for voice, (low, high) in voice_types.items():
+    pitch_range_detail = {}
+    
+    for voice, attributes in voice_types.items():
+        low, high = attributes["range"]
         if low <= detect_median_pitch <= high:
             identified_voice_type = voice
+            pitch_range_detail = {
+                "name": "pitch_range",
+                "value": f"{low} - {high} Hz",
+                "type": identified_voice_type,
+                "detail": attributes["detail"],
+                "tips": attributes["tips"]
+            }
             break
-    return identified_voice_type
+    
+    return pitch_range_detail
 
 # Function to find false and unspoken words
 def find_false_and_unspoken_words(input_text, reference_text):
@@ -252,11 +333,11 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     if similarity_percentage < 50:
         result = {
-            'input_words': input_words,
-            'reference_words': reference_words,
-            'false_words': false_words,
-            'unspoken_words': unspoken_words,
-            'similarity_percentage': similarity_percentage,
+            # 'input_words': input_words,
+            # 'reference_words': reference_words,
+            # 'false_words': false_words,
+            # 'unspoken_words': unspoken_words,
+            # 'similarity_percentage': similarity_percentage,
             'error': 'your similarity percentage is less than 50%, try to record again'
         }
         return convert_to_float(result)
@@ -294,29 +375,51 @@ def analyze_audio(input_audio_path, reference_audio_path):
     identified_voice_type = identify_voice_type(detect_median_pitch)
     
     # Compile the result
-    result = {
-        'input_words': input_words,
-        'reference_words': reference_words,
-        'false_words': false_words,
-        'unspoken_words': unspoken_words,
-        'intonation_accuracy_percentage': str(intonation_accuracy_percentage),
-        'rhythm_accuracy_percentage': str(rhythm_accuracy_percentage),
-        'input_speech_rate': str(input_speech_rate),
-        'reference_speech_rate': str(reference_speech_rate),
-        'detect_median_pitch': str(detect_median_pitch),
-        'pitch_range': str((input_pitch_min, input_pitch_max)),
-        'identified_voice_type': str(identified_voice_type),
-        'pitch_graphs': pitch_graphs,
-        'speech_rate_graph': speech_rate_graph,
+    # result = {
+    #     'input_words': input_words,
+    #     'reference_words': reference_words,
+    #     'false_words': false_words,
+    #     'unspoken_words': unspoken_words,
+    #     'intonation_accuracy_percentage': str(intonation_accuracy_percentage),
+    #     'rhythm_accuracy_percentage': str(rhythm_accuracy_percentage),
+    #     'input_speech_rate': str(input_speech_rate),
+    #     'reference_speech_rate': str(reference_speech_rate),
+    #     'detect_median_pitch': str(detect_median_pitch),
+    #     'pitch_range': str((input_pitch_min, input_pitch_max)),
+    #     'identified_voice_type': str(identified_voice_type),
+    #     'pitch_graphs': pitch_graphs,
+    #     'speech_rate_graph': speech_rate_graph,
+    # }
+    intonation = {
+        "name": "intonation",
+        "accuracy": str(int(intonation_accuracy_percentage)),   
     }
-    
+    rhythm = {
+        "name": "rhythm",
+        "accuracy": str(int(rhythm_accuracy_percentage)),
+    }
+
+
     # Convert float32 to standard Python floats before returning the result
     # res_converted =  convert_to_float(result)
 
     # print(type(res_converted))
     # print(type(result))
     # return type of result
-    return {"result": result}
+    return {{"AuditionResult": 
+             {
+                "intonation": intonation,
+                "rhythm": rhythm,   
+            }
+            },
+            {"VocalProfile":
+             {
+                "pitch_range": identify_voice_type,
+                "speech_rate": identify_speech_rate,
+             }
+
+            }
+        }
 
 
 # Route for analysis

@@ -309,7 +309,13 @@ def analyze_audio(input_audio_path, reference_audio_path):
     }
     
     # Convert float32 to standard Python floats before returning the result
-    return convert_to_float(result)
+    res_converted =  convert_to_float(result)
+
+
+    # return type of result
+    return {'datatype': type(result),
+            'datatype_after_conversion': type(res_converted),
+            'result': res_converted}
 
 
 # Route for analysis

@@ -190,27 +190,27 @@ def generate_pitch_graphs(input_pitches, reference_pitches):
 
 def identify_speech_rate(speech_rate_wpm):
     speech_rate_categories = {
-        "Leisure Pace (less than 110 wpm)": {
+        "Leisure Pace": {
             "range": (0, 110),
             "feedback": "Your speech is at a Leisure Pace, giving your words time to resonate. It’s great for thoughtful moments but might need a slight speed boost in conversations.",
             "tips": "Practice slightly faster speech to keep listeners engaged while maintaining clarity."
         },
-        "Conversational Flow (120 - 160 wpm)": {
+        "Conversational Flow": {
             "range": (120, 160),
             "feedback": "You're at a Conversational Flow—natural and engaging. This pace works well for everyday interactions.",
             "tips": "Vary your speed slightly to emphasize key points or add excitement."
         },
-        "Expressive Pace (160 - 200 wpm)": {
+        "Expressive Pace": {
             "range": (160, 200),
             "feedback": "Your Expressive Pace adds energy and excitement. Just be careful to maintain clarity at this speed.",
             "tips": "Focus on clear articulation to ensure your words remain understandable."
         },
-        "Narrator's Tempo (150 - 160 wpm)": {
+        "Narrator's Tempo": {
             "range": (150, 160),
             "feedback": "You're at a Narrator's Tempo, ideal for clear, thoughtful delivery. This pace works well for storytelling.",
             "tips": "Vary your speed slightly to highlight important moments."
         },
-        "Speed Talk (250 - 400 wpm)": {
+        "Speed Talk": {
             "range": (250, 400),
             "feedback": "Your Speed Talk is impressively fast, perfect for rapid delivery. Just watch for clarity.",
             "tips": "Practice enunciating key words even at high speeds to keep your message clear."
@@ -226,7 +226,7 @@ def identify_speech_rate(speech_rate_wpm):
             identified_speech_rate_category = category
             speech_rate_feedback = {
                 "name": "speech_rate",
-                "value": f"{low} - {high} wpm",
+                "value": f"{speech_rate_wpm} wpm",
                 "type": identified_speech_rate_category,
                 "feedback": attributes["feedback"],
                 "tips": attributes["tips"]

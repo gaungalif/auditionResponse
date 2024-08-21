@@ -229,7 +229,7 @@ def find_false_and_unspoken_words(input_text, reference_text):
 
 
 # Analyze audio (Background Task)
-# @celery.task(name='app.main.analyze_audio')
+@celery.task(app.name)
 def analyze_audio(input_audio_path, reference_audio_path):
     # Convert input and reference audio to WAV if needed
     input_audio_wav = os.path.join(tempfile.gettempdir(), 'input_audio.wav')

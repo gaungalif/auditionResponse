@@ -252,14 +252,15 @@ def analyze_audio(input_audio_path, reference_audio_path):
     similarity_percentage = calculate_similarity_percentage(input_words, reference_words)
     
     if similarity_percentage < 50:
-        return {
+        result = {
             'input_words': input_words,
             'reference_words': reference_words,
             'false_words': false_words,
             'unspoken_words': unspoken_words,
             'similarity_percentage': similarity_percentage,
-            'error': 'your simmilarity percentage is less than 50%, try to record again'
+            'error': 'your similarity percentage is less than 50%, try to record again'
         }
+        return convert_to_float(result)
 
     # Analyze intonation
     input_pitches = extract_pitch(input_audio_wav)
@@ -292,9 +293,9 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Identify voice type
     identified_voice_type = identify_voice_type(detect_median_pitch)
-
     
-    return {
+    # Compile the result
+    result = {
         'input_words': input_words,
         'reference_words': reference_words,
         'false_words': false_words,
@@ -308,9 +309,11 @@ def analyze_audio(input_audio_path, reference_audio_path):
         'identified_voice_type': identified_voice_type,
         'pitch_graphs': pitch_graphs,
         'speech_rate_graph': speech_rate_graph,
-
-
     }
+    
+    # Convert float32 to standard Python floats before returning the result
+    return convert_to_float(result)
+
 
 # Route for analysis
 @app.route('/analyze', methods=['POST'])
@@ -335,6 +338,7 @@ def analyze():
     task = analyze_audio.delay(input_wav_path, reference_audio_path)
 
     return jsonify({"task_id": task.id}), 202
+    
 
 # Endpoint to check task status
 @app.route('/status/<task_id>')

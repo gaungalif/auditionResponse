@@ -317,9 +317,8 @@ def analyze_audio(input_audio_path, reference_audio_path):
 def analyze():
     character_id = request.form['characterID']
     input_file = request.files['input_audio']
-
     # Retrieve reference audio based on characterID
-    reference_audio_path = f"/path/to/reference_audios/{character_id}.wav"  # Adjust this path accordingly
+    reference_audio_path = f"./audio/{character_id}.wav"  # Adjust this path accordingly
 
     if not os.path.exists(reference_audio_path):
         return jsonify({"error": "Reference audio not found"}), 404

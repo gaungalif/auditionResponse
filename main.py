@@ -17,7 +17,11 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from pydub import AudioSegment
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Max file size 16 MB
 
+# Initialize Celery
+celery = Celery(app.name)
 # Function to convert m4a to wav
 def convert_m4a_to_wav(m4a_path, wav_path):
     audio = AudioSegment.from_file(m4a_path, format='m4a')
@@ -220,11 +224,7 @@ def find_false_and_unspoken_words(input_text, reference_text):
 
 
 # Initialize Flask and configure Celery
-app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Max file size 16 MB
 
-# Initialize Celery
-celery = Celery(app.name)
 
 
 

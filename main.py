@@ -223,9 +223,6 @@ def find_false_and_unspoken_words(input_text, reference_text):
 # )
 
 
-# Initialize Flask and configure Celery
-
-
 
 
 # Analyze audio (Background Task)

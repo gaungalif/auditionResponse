@@ -265,16 +265,16 @@ def analyze_audio(input_audio_path, reference_audio_path):
     input_pitches = extract_pitch(input_audio_wav)
     reference_pitches = extract_pitch(reference_audio_wav)
     
-    intonation_mean_input, intonation_std_input = analyze_intonation(input_pitches)
-    intonation_mean_reference, intonation_std_reference = analyze_intonation(reference_pitches)
+    intonation_mean_input, intonation_std_input = convert_to_float(analyze_intonation(input_pitches))
+    intonation_mean_reference, intonation_std_reference = convert_to_float(analyze_intonation(reference_pitches))
     
-    intonation_accuracy_percentage = calculate_intonation_accuracy(intonation_mean_input, intonation_std_input, intonation_mean_reference, intonation_std_reference)
+    intonation_accuracy_percentage = convert_to_float(calculate_intonation_accuracy(intonation_mean_input, intonation_std_input, intonation_mean_reference, intonation_std_reference))
     
     # Analyze rhythm
     onset_times_input = librosa.onset.onset_detect(y=librosa.load(input_audio_wav, sr=None)[0], sr=librosa.load(input_audio_wav, sr=None)[1], units='time')
     onset_times_reference = librosa.onset.onset_detect(y=librosa.load(reference_audio_wav, sr=None)[0], sr=librosa.load(reference_audio_wav, sr=None)[1], units='time')
     
-    _, rhythm_accuracy_percentage = calculate_rhythm_accuracy(onset_times_input, onset_times_reference)
+    _, rhythm_accuracy_percentage = convert_to_float(calculate_rhythm_accuracy(onset_times_input, onset_times_reference))
     
     # Calculate speech rate
     input_speech_rate = calculate_speech_rate(input_audio_wav, input_words)
@@ -311,12 +311,12 @@ def analyze_audio(input_audio_path, reference_audio_path):
     }
     
     # Convert float32 to standard Python floats before returning the result
-    res_converted =  convert_to_float(result)
+    # res_converted =  convert_to_float(result)
 
-    print(type(res_converted))
-    print(type(result))
+    # print(type(res_converted))
+    # print(type(result))
     # return type of result
-    return {"result": res_converted}
+    return {"result": result}
 
 
 # Route for analysis

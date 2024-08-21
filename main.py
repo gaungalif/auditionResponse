@@ -359,6 +359,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Calculate speech rate
     input_speech_rate = calculate_speech_rate(input_audio_wav, input_words)
+    identified_speech_rate = identify_speech_rate(input_speech_rate)
     reference_speech_rate = calculate_speech_rate(reference_audio_wav, reference_words)
 
     speech_rate_graph = generate_speech_rate_graph(input_speech_rate, reference_speech_rate)
@@ -390,6 +391,12 @@ def analyze_audio(input_audio_path, reference_audio_path):
     #     'pitch_graphs': pitch_graphs,
     #     'speech_rate_graph': speech_rate_graph,
     # }
+    # Convert float32 to standard Python floats before returning the result
+    # res_converted =  convert_to_float(result)
+
+    # print(type(res_converted))
+    # print(type(result))
+    # return type of result
     intonation = {
         "name": "intonation",
         "accuracy": str(int(intonation_accuracy_percentage)),   
@@ -400,22 +407,18 @@ def analyze_audio(input_audio_path, reference_audio_path):
     }
 
 
-    # Convert float32 to standard Python floats before returning the result
-    # res_converted =  convert_to_float(result)
 
-    # print(type(res_converted))
-    # print(type(result))
-    # return type of result
-    return {{"AuditionResult": 
-             {
+    return {
+            {"AuditionResult": 
+            {
                 "intonation": intonation,
                 "rhythm": rhythm,   
             }
             },
             {"VocalProfile":
              {
-                "pitch_range": identify_voice_type,
-                "speech_rate": identify_speech_rate,
+                "pitch_range": identified_voice_type,
+                "speech_rate": identified_speech_rate,
              }
 
             }

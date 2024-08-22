@@ -226,7 +226,7 @@ def identify_speech_rate(speech_rate_wpm):
             identified_speech_rate_category = category
             speech_rate_feedback = {
                 "name": "speech_rate",
-                "value": f"{speech_rate_wpm} wpm",
+                "value": f"{int(speech_rate_wpm)} wpm",
                 "type": identified_speech_rate_category,
                 "feedback": attributes["feedback"],
                 "tips": attributes["tips"]
@@ -409,14 +409,14 @@ def analyze_audio(input_audio_path, reference_audio_path):
 
 
     return {
-                "AuditionResult":{
-                    "intonation": intonation,
-                    "rhythm": rhythm,   
-                },
-                "VocalProfile":{
-                    "pitch_range": identified_voice_type,
-                    "speech_rate": identified_speech_rate,
-                }
+                "AuditionResult":[
+                    intonation,
+                    rhythm,   
+                ],
+                "VocalProfile":[
+                    identified_voice_type,
+                    identified_speech_rate,
+                ]
             }
 
 

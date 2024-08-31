@@ -297,15 +297,6 @@ def find_false_and_unspoken_words(input_text, reference_text):
 
     return list(false_words), list(unspoken_words)
 
-# from utils import (
-#     transcribe_audio, split_text_to_words, extract_pitch, analyze_intonation,
-#     calculate_rhythm_accuracy, calculate_pitch_range, calculate_speech_rate,
-#     calculate_intonation_accuracy, calculate_similarity_percentage, cleanse_audio,
-#     generate_pitch_graphs, identify_voice_type, convert_m4a_to_wav, find_false_and_unspoken_words,
-#     calculate_speech_rate, generate_speech_rate_graph
-# )
-
-
 
 
 # Analyze audio (Background Task)
@@ -441,8 +432,12 @@ def analyze():
 
     # Run analysis as a background task
     task = analyze_audio.delay(input_wav_path, reference_audio_path)
+    try:
+        return jsonify({"task_id": task.id}), 202
+    except Exception as e:
+        print(e)
+        return e
 
-    return jsonify({"task_id": task.id}), 202
 
 
     

@@ -414,6 +414,7 @@ def analyze_audio(input_audio_path, reference_audio_path):
 # Route for analysis
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    print('masuk')
     character_id = request.form['characterID']
     input_file = request.files['input_audio']
     # Retrieve reference audio based on characterID
@@ -432,11 +433,8 @@ def analyze():
 
     # Run analysis as a background task
     task = analyze_audio.delay(input_wav_path, reference_audio_path)
-    try:
-        return jsonify({"task_id": task.id}), 202
-    except Exception as e:
-        print(e)
-        return jsonify({"error ": e}), 500
+
+    return jsonify({"task_id": task.id}), 202
 
 
 
@@ -467,6 +465,7 @@ def task_status(task_id):
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({"error": "File too large!"}), 413
+
 
 
 if __name__ == '__main__':

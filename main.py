@@ -436,7 +436,7 @@ def analyze():
         return jsonify({"task_id": task.id}), 202
     except Exception as e:
         print(e)
-        return e
+        return jsonify({"error ": e}), 500
 
 
 

@@ -414,25 +414,35 @@ def analyze_audio(input_audio_path, reference_audio_path):
 # Route for analysis
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    print('masuk')
+    print('masuk1')
     character_id = request.form['characterID']
+    print('masuk2')
     input_file = request.files['input_audio']
     # Retrieve reference audio based on characterID
+    print('masuk3')
     reference_audio_path = f"./audio/{character_id}.wav"  # Adjust this path accordingly
 
+    print('masuk4')
     if not os.path.exists(reference_audio_path):
+        print('masuk5')
         return jsonify({"error": "Reference audio not found"}), 404
 
+    print('masuk6')
     # Save input m4a audio to disk
     input_m4a_path = os.path.join(tempfile.gettempdir(), 'input_audio.m4a')
+    print('masuk7')
     input_file.save(input_m4a_path)
 
     # Convert m4a to wav
+    print('masuk8')
     input_wav_path = os.path.join(tempfile.gettempdir(), 'input_audio.wav')
+    print('masuk9')
     convert_m4a_to_wav(input_m4a_path, input_wav_path)
 
+    print('masuk10')
     # Run analysis as a background task
     task = analyze_audio.delay(input_wav_path, reference_audio_path)
+    print('masuk11')
 
     return jsonify({"task_id": task.id}), 202
 

@@ -415,9 +415,10 @@ def analyze_audio(input_audio_path, reference_audio_path):
 @app.route('/analyze', methods=['POST'])
 def analyze():
     print(request)
-    print(request.form)
+    print(request.form['characterID'])
     character_id = request.form['characterID']
     print('masuk2')
+    print(request.form['input_audio'])
     input_file = request.files['input_audio']
     # Retrieve reference audio based on characterID
     print('masuk3')

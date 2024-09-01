@@ -53,8 +53,8 @@ def split_text_to_words(text):
 
 # Extract pitch from audio
 def extract_pitch(audio_path):
-    y, sr = librosa.load(audio_path, sr=None)
-    pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+    y, srs = librosa.load(audio_path, sr=None)
+    pitches, magnitudes = librosa.piptrack(y=y, sr=srs)
     pitches = pitches[magnitudes > 0]
     
     # Filter to keep only realistic human pitch range (approximately 80 Hz to 1100 Hz)
@@ -72,10 +72,16 @@ def analyze_intonation(pitches):
 def calculate_rhythm_accuracy(onset_times_input, onset_times_reference):
     onset_times_input = np.array(onset_times_input)
     onset_times_reference = np.array(onset_times_reference)
+    
+    # Menggunakan DTW untuk mencocokkan onset
     distance, _ = fastdtw(onset_times_input.reshape(-1, 1), onset_times_reference.reshape(-1, 1), dist=euclidean)
-    average_onset_difference = np.mean(distance)
-    rhythm_accuracy_percentage = 100 - average_onset_difference
-    return average_onset_difference, rhythm_accuracy_percentage
+    
+    # Normalisasi jarak untuk akurasi dalam persentase
+    max_distance = np.max([np.abs(onset_times_input).sum(), np.abs(onset_times_reference).sum()])
+    rhythm_accuracy_percentage = 100 - (distance / max_distance * 100)
+    
+    return rhythm_accuracy_percentage
+
 
 # Calculate pitch range
 def calculate_pitch_range(pitches):
@@ -126,20 +132,17 @@ def generate_speech_rate_graph(input_speech_rate, reference_speech_rate):
     return speech_rate_graph
 
 # Calculate intonation accuracy
-def calculate_intonation_accuracy(mean_input, std_input, mean_reference, std_reference):
-    if mean_reference != 0:
-        mean_difference = abs(mean_input - mean_reference)
-        mean_accuracy_percentage = max(0, 100 - (mean_difference / mean_reference * 100))
-    else:
-        mean_accuracy_percentage = 0
+def calculate_intonation_accuracy(pitch_input, pitch_reference):
+    pitch_input = np.array(pitch_input)
+    pitch_reference = np.array(pitch_reference)
     
-    if std_reference != 0:
-        std_difference = abs(std_input - std_reference)
-        std_accuracy_percentage = max(0, 100 - (std_difference / std_reference * 100))
-    else:
-        std_accuracy_percentage = 0
+    # Menggunakan DTW untuk mencocokkan pitch
+    distance, _ = fastdtw(pitch_input.reshape(-1, 1), pitch_reference.reshape(-1, 1), dist=euclidean)
     
-    intonation_accuracy_percentage = (mean_accuracy_percentage + std_accuracy_percentage) / 2
+    # Normalisasi jarak untuk akurasi dalam persentase
+    max_distance = np.max([np.abs(pitch_input).sum(), np.abs(pitch_reference).sum()])
+    intonation_accuracy_percentage = 100 - (distance / max_distance * 100)
+    
     return intonation_accuracy_percentage
 
 # Calculate similarity percentage
@@ -312,26 +315,26 @@ def analyze_audio(input_audio_path, reference_audio_path):
     
     # Transcribe audio to text
     input_text = transcribe_audio(input_audio_wav)
-    reference_text = transcribe_audio(reference_audio_wav)
+    # reference_text = transcribe_audio(reference_audio_wav)
     
     input_words = split_text_to_words(input_text)
-    reference_words = split_text_to_words(reference_text)
+    # reference_words = split_text_to_words(reference_text)
     
-    false_words, unspoken_words = find_false_and_unspoken_words(input_text, reference_text)
+    # false_words, unspoken_words = find_false_and_unspoken_words(input_text, reference_text)
 
     # Calculate similarity percentage
-    similarity_percentage = calculate_similarity_percentage(input_words, reference_words)
+    # similarity_percentage = calculate_similarity_percentage(input_words, reference_words)
     
-    if similarity_percentage < 50:
-        result = {
+    # if similarity_percentage < 50:
+        # result = {
             # 'input_words': input_words,
             # 'reference_words': reference_words,
             # 'false_words': false_words,
             # 'unspoken_words': unspoken_words,
             # 'similarity_percentage': similarity_percentage,
-            'error': 'your similarity percentage is less than 50%, try to record again'
-        }
-        return convert_to_float(result)
+        #     'error': 'your similarity percentage is less than 50%, try to record again'
+        # }
+        # return convert_to_float(result)
 
     # Analyze intonation
     input_pitches = extract_pitch(input_audio_wav)
@@ -340,28 +343,29 @@ def analyze_audio(input_audio_path, reference_audio_path):
     intonation_mean_input, intonation_std_input = convert_to_float(analyze_intonation(input_pitches))
     intonation_mean_reference, intonation_std_reference = convert_to_float(analyze_intonation(reference_pitches))
     
-    intonation_accuracy_percentage = convert_to_float(calculate_intonation_accuracy(intonation_mean_input, intonation_std_input, intonation_mean_reference, intonation_std_reference))
+    # intonation_accuracy_percentage = convert_to_float(calculate_intonation_accuracy(intonation_mean_input, intonation_std_input, intonation_mean_reference, intonation_std_reference))
+    intonation_accuracy_percentage = convert_to_float(calculate_intonation_accuracy(input_pitches, reference_pitches))
     
     # Analyze rhythm
     onset_times_input = librosa.onset.onset_detect(y=librosa.load(input_audio_wav, sr=None)[0], sr=librosa.load(input_audio_wav, sr=None)[1], units='time')
     onset_times_reference = librosa.onset.onset_detect(y=librosa.load(reference_audio_wav, sr=None)[0], sr=librosa.load(reference_audio_wav, sr=None)[1], units='time')
     
-    _, rhythm_accuracy_percentage = convert_to_float(calculate_rhythm_accuracy(onset_times_input, onset_times_reference))
+    rhythm_accuracy_percentage = convert_to_float(calculate_rhythm_accuracy(onset_times_input, onset_times_reference))
     
     # Calculate speech rate
     input_speech_rate = calculate_speech_rate(input_audio_wav, input_words)
     identified_speech_rate = identify_speech_rate(input_speech_rate)
-    reference_speech_rate = calculate_speech_rate(reference_audio_wav, reference_words)
+    # reference_speech_rate = calculate_speech_rate(reference_audio_wav, reference_words)
 
-    speech_rate_graph = generate_speech_rate_graph(input_speech_rate, reference_speech_rate)
+    # speech_rate_graph = generate_speech_rate_graph(input_speech_rate, reference_speech_rate)
     # Calculate pitch range
-    input_pitch_min, input_pitch_max, _ = calculate_pitch_range(input_pitches)
+    # input_pitch_min, input_pitch_max, _ = calculate_pitch_range(input_pitches)
     
     # Calculate median pitch
     detect_median_pitch = convert_to_float(np.median(input_pitches) if input_pitches else 0)
     
     # Generate pitch graphs
-    pitch_graphs = generate_pitch_graphs(input_pitches, reference_pitches)
+    # pitch_graphs = generate_pitch_graphs(input_pitches, reference_pitches)
     
     # Identify voice type
     identified_voice_type = identify_voice_type(detect_median_pitch)
@@ -483,5 +487,5 @@ def request_entity_too_large(error):
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5000)
 
-# taskes = analyze_audio('audio/reference.wav', 'audio/reference.wav')
+# taskes = analyze_audio('audio/ham.wav', 'audio/ham.wav')
 # print(taskes)
